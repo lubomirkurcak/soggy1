@@ -4,19 +4,8 @@ using UnityEngine;
 
 public class Controller : MonoBehaviour {
 
-	// camera
-	public Transform camt;
-	float yaw;
-	float pitch;
-	float sinyaw;
-	float cosyaw;
-	float Sensitivity = 0.006f;
-	float acceleration = 10f;
-	Vector2 input;
-	Vector3 aim;
-	Vector3 forw;
-
 	// things
+	public CameraScript cams;
 	public Vector3 pos;
 	public Quaternion rot;
 	public Collider col;
@@ -25,6 +14,9 @@ public class Controller : MonoBehaviour {
 	Collider[] cols;
 	bool[] ignoreCols;
 	Vector3 half_extents;
+	Vector2 input;
+
+	float acceleration = 10f;
 
 	void Start(){
 		half_extents = new Vector3 (5f, 5f, 5f);
@@ -34,35 +26,6 @@ public class Controller : MonoBehaviour {
 	}
 
 	void InputProcessing(){
-		{
-			yaw += CInput.GetAxis ("Mouse X") * Sensitivity;
-
-			if (yaw > Helper.tau) {
-				yaw -= Helper.tau;
-			} else if (yaw < -Helper.tau) {
-				yaw += Helper.tau;
-			}
-
-			/*if (InvertMouse) pitch += CInput.GetAxis ("Mouse Y") * Sensitivity;
-			else */
-			pitch -= CInput.GetAxis ("Mouse Y") * Sensitivity;
-			pitch = Mathf.Clamp (pitch, -Helper.halfpi, Helper.halfpi);
-			sinyaw = Mathf.Sin (-yaw);
-			cosyaw = Mathf.Cos (yaw);
-			float sinpitch = Mathf.Sin (pitch);
-			float cospitch = Mathf.Cos (pitch);
-
-			aim.x = forw.x = -sinyaw;
-			forw.y = 0f;
-			aim.z = forw.z = cosyaw;
-
-			aim.x *= cospitch;
-			aim.y = -sinpitch;
-			aim.z *= cospitch;
-
-			rot = Helper.Euler (pitch, yaw);
-		}
-
 		{
 			input.x = 0f;
 			input.y = 0f;
@@ -86,21 +49,21 @@ public class Controller : MonoBehaviour {
 		}
 	}
 
-	void Update () {
+	public void update () {
 		InputProcessing ();
 
 		Vector3 accel;
 		{
+			Vector3 forw = cams.forw;
 			Vector3 side;
-			side.x = cosyaw;
+			side.x = forw.z;
 			side.y = 0f;
-			side.z = sinyaw;
+			side.z = -forw.x;
 
-//			 2D
-//			accel =  input.y * forw;
-
+			// 2D
+			accel =  input.y * forw;
 			// 3D
-			accel =  input.y * aim;
+//			accel =  input.y * cams.aim;
 
 			accel += input.x * side;
 		}
@@ -148,7 +111,5 @@ public class Controller : MonoBehaviour {
 		}
 
 		transform.localPosition = pos;
-
-		Debug.Log (iterations);
 	}
 }

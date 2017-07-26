@@ -9,7 +9,8 @@ public class Waypoint : MonoBehaviour {
 	public Image image;
 	public Text text;
 	public Camera cam;
-	public Player player;
+//	public Player player;
+	public CameraScript cams;
 
 	Transform target;
 
@@ -117,8 +118,8 @@ public class Waypoint : MonoBehaviour {
 
 		if (Input.GetKey (KeyCode.V)) {
 			delta /= deltaMagn;
-			player.pitch = -Mathf.Asin (delta.y);
-			player.yaw = Mathf.Atan2 (delta.x, delta.z);
+			cams.pitch = -Mathf.Asin (delta.y);
+			cams.yaw = Mathf.Atan2 (delta.x, delta.z);
 		}
 	}
 

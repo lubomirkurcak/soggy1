@@ -16,7 +16,7 @@ public class Projectile : MonoBehaviour {
 	float ExplodeTime = float.PositiveInfinity;
 
 	public void Fire(Player p){
-		Fire (p.eye, p.q * Helper.v3forw * Velocity + p.getVel);
+		Fire (p.eye, p.cams.aim * Velocity + p.getVel);
 	}
 
 	public void Fire(Vector3 pos, Vector3 vel){

@@ -11,6 +11,21 @@ public class CameraScript : MonoBehaviour {
 	public Transform target;
 	public PostProcessingProfile cameraProfile;
 
+	[System.NonSerialized]
+	public float yaw;
+	[System.NonSerialized]
+	public float pitch;
+	[System.NonSerialized]
+	public float sinyaw;
+	[System.NonSerialized]
+	public float cosyaw;
+	float Sensitivity = 0.006f;
+	bool InvertMouse;
+	[System.NonSerialized]
+	public Vector3 aim;
+	[System.NonSerialized]
+	public Vector3 forw;
+
 	public enum Behaviour{
 		Free,
 		Player,
@@ -19,12 +34,18 @@ public class CameraScript : MonoBehaviour {
 	}
 
 	public Behaviour b;
-	Vector3 pos;
-	Quaternion rot;
+	public Vector3 pos;
+	public Quaternion rot;
 	Vector2 input;
 	Vector3 vel;
 
 	void Start(){
+		Console.AddCommand ("sensitivity", (string arg) => {
+			Helper.ParseFloat(arg, ref Sensitivity);
+		});
+		Console.AddCommand ("mouse_invert", (string arg) => {
+			InvertMouse = Helper.ParseBool(arg);
+		});
 		Console.AddCommand("res", (string arg) => {
 			char[] split = new char[1];
 			split [0] = ' ';
@@ -72,34 +93,55 @@ public class CameraScript : MonoBehaviour {
 		});
 	}
 
-	void Update(){
-		if (Input.GetKeyDown (KeyCode.F1)) {
-			b = Behaviour.Player;
+	public void apply(){
+		camt.localRotation = rot;
+		camt.localPosition= pos;
+	}
+
+	public void update(){
+		// NOTE(lubomir): Arrows camera controls
+		const float arrowSens = 4f;
+		if (CInput.GetKey (KeyCode.RightArrow)) {
+			yaw += TL.dt * arrowSens;
+		}
+		if (CInput.GetKey (KeyCode.LeftArrow)) {
+			yaw -= TL.dt * arrowSens;
+		}
+		if (CInput.GetKey (KeyCode.UpArrow)) {
+			pitch -= TL.dt * arrowSens;
+		}
+		if (CInput.GetKey (KeyCode.DownArrow)) {
+			pitch += TL.dt * arrowSens;
 		}
 
-		if (Input.GetKeyDown (KeyCode.F2)) {
-			b = Behaviour.Transform;
+		yaw += CInput.GetAxis ("Mouse X") * Sensitivity;
+
+		if (yaw > Helper.tau) {
+			yaw -= Helper.tau;
+		} else if (yaw < -Helper.tau) {
+			yaw += Helper.tau;
 		}
 
-		if (Input.GetKeyDown (KeyCode.F3)) {
-			b = Behaviour.Controller;
-		}
+		if (InvertMouse)
+			pitch += CInput.GetAxis ("Mouse Y") * Sensitivity;
+		else
+			pitch -= CInput.GetAxis ("Mouse Y") * Sensitivity;
+		pitch = Mathf.Clamp (pitch, -Helper.halfpi, Helper.halfpi);
 
-		switch (b) {
-		case Behaviour.Transform:
-//			camt.localRotation = rot;
-			camt.localPosition = pos = target.localPosition + rot*Vector3.forward*-1f;
-			break;
-		case Behaviour.Player:
-			camt.localPosition = pos = p.eye;
-			camt.localRotation = rot = p.q;
-			break;
-		case Behaviour.Controller:
-			camt.localPosition = pos = controller.pos;
-			camt.localRotation = rot = controller.rot;
-			break;
-		case Behaviour.Free:
-			break;
-		}
+		// Calculate rot
+		sinyaw = Mathf.Sin (-yaw);
+		cosyaw = Mathf.Cos (yaw);
+		float sinpitch = Mathf.Sin (pitch);
+		float cospitch = Mathf.Cos (pitch);
+
+		aim.x = forw.x = -sinyaw;
+		forw.y = 0f;
+		aim.z = forw.z = cosyaw;
+
+		aim.x *= cospitch;
+		aim.y = -sinpitch;
+		aim.z *= cospitch;
+
+		rot = Helper.Euler (pitch, yaw);
 	}
 }

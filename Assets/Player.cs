@@ -7,7 +7,7 @@ public class Player : MonoBehaviour {
 
 	public Char c;
 	public CharacterController cc;
-//	public CharController charc;
+	public CameraScript cams;
 	public Transform me;
 
 	public Vector3 getVel{
@@ -19,9 +19,6 @@ public class Player : MonoBehaviour {
 		}
 	}
 
-	[System.NonSerialized]public float yaw;
-	[System.NonSerialized]public float pitch;
-	[System.NonSerialized]public Quaternion q;
 	[System.NonSerialized]public Vector3 pos;
 	[System.NonSerialized]public Vector3 vel;
 	[System.NonSerialized]public Vector3 eye;
@@ -30,8 +27,6 @@ public class Player : MonoBehaviour {
 	[System.NonSerialized]public float slope;
 	Vector3 step;
 	Vector2 input;
-	float sinyaw;
-	float cosyaw;
 	//	bool touching_ground; // TODO(lubomir): Reimplement this for turrets?
 	bool walkable_ground;
 	float lastY;
@@ -53,10 +48,10 @@ public class Player : MonoBehaviour {
 
 	[System.NonSerialized]public State state = State.Air;
 
-	[Space(10)]
-	public bool InvertMouse = false;
-	public float Sensitivity = 0.006f;
-	[Space(10)]
+//	[Space(10)]
+//	public bool InvertMouse = false;
+//	public float Sensitivity = 0.006f;
+//	[Space(10)]
 	public float MaxSpeed;
 	public float Accel;
 	public float MaxAirSpeed;
@@ -116,12 +111,6 @@ public class Player : MonoBehaviour {
 		Console.AddCommand ("footstep", (string arg) => {
 			Helper.ParseFloat(arg, ref footstep_length);
 		});
-		Console.AddCommand ("sensitivity", (string arg) => {
-			Helper.ParseFloat(arg, ref Sensitivity);
-		});
-		Console.AddCommand ("mouse_invert", (string arg) => {
-			InvertMouse = Helper.ParseBool(arg);
-		});
 		Console.AddCommand ("gravity", (string arg) => {
 			Helper.ParseFloat(arg, ref Gravity);
 			Physics.gravity = new Vector3(0,-Gravity,0);
@@ -156,7 +145,7 @@ public class Player : MonoBehaviour {
 		}
 
 		if (CInput.GetKey (KeyCode.LeftShift)) {
-			vel = q * Vector3.forward * 20f;
+			vel = cams.forw * 20f;
 		}
 	}
 
@@ -166,39 +155,6 @@ public class Player : MonoBehaviour {
 
 		// NOTE(lubomir): Request input
 		CInput.Requester = InputID;
-
-		// NOTE(lubomir): Arrows camera controls
-		const float arrowSens = 4f;
-		if (CInput.GetKey (KeyCode.RightArrow)) {
-			yaw += TL.dt * arrowSens;
-		}
-		if (CInput.GetKey (KeyCode.LeftArrow)) {
-			yaw -= TL.dt * arrowSens;
-		}
-		if (CInput.GetKey (KeyCode.UpArrow)) {
-			pitch -= TL.dt * arrowSens;
-		}
-		if (CInput.GetKey (KeyCode.DownArrow)) {
-			pitch += TL.dt * arrowSens;
-		}
-
-		// NOTE(lubomir): Mouse camera controls
-		yaw += CInput.GetAxis ("Mouse X") * Sensitivity;
-
-		if (yaw > Helper.tau) {
-			yaw -= Helper.tau;
-		} else if (yaw < -Helper.tau){
-			yaw += Helper.tau;
-		}
-
-		if (InvertMouse) pitch += CInput.GetAxis ("Mouse Y") * Sensitivity;
-		else pitch -= CInput.GetAxis ("Mouse Y") * Sensitivity;
-		pitch = Mathf.Clamp (pitch, -Helper.halfpi, Helper.halfpi);
-
-		// NOTE(lubomir): Calculate rotation
-		sinyaw = Mathf.Sin (-yaw);
-		cosyaw = Mathf.Cos (yaw);
-		q = Helper.Euler (pitch, yaw);
 
 		// NOTE(lubomir): Calculate input vector
 		// TODO(lubomir): Add controller version
@@ -311,8 +267,8 @@ public class Player : MonoBehaviour {
 
 				if (CanAccelerate) {
 					// NOTE(lubomir): Calculate acceleration vector
-					float ax = (input.x * cosyaw - input.y * sinyaw);
-					float az = (input.x * sinyaw + input.y * cosyaw);
+					float ax = (input.x * cams.cosyaw - input.y * cams.sinyaw);
+					float az = (input.x * cams.sinyaw + input.y * cams.cosyaw);
 
 					// NOTE(lubomir): Modify acceleration vector so that we don't exceed maximum speed
 					float dot = vel.x * ax + vel.z * az;
@@ -349,8 +305,8 @@ public class Player : MonoBehaviour {
 					float sqrmagn = vel.x * vel.x + vel.z * vel.z;
 
 					// NOTE(lubomir): Calculate acceleration vector
-					float ax = (input.x * cosyaw - input.y * sinyaw);
-					float az = (input.x * sinyaw + input.y * cosyaw);
+					float ax = (input.x * cams.cosyaw - input.y * cams.sinyaw);
+					float az = (input.x * cams.sinyaw + input.y * cams.cosyaw);
 //					float frame_accel = AirAccel * TL.dt;
 					float frame_accel = (crouching ? CrouchAirAccel : AirAccel) * TL.dt;
 
@@ -404,6 +360,7 @@ public class Player : MonoBehaviour {
 			eye.y += 0.45f;
 		}*/
 		eye.y += 0.45f;
+		cams.pos = eye;
 
 //		touching_ground = cc.isGrounded;
 //		touching_ground = charc.touching_ground;
