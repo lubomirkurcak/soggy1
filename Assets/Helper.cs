@@ -5,7 +5,7 @@ using UnityEngine;
 public static class Helper {
 	static Helper(){
 		{
-			int PlayerLayer = LayerMask.NameToLayer ("Player");
+			int PlayerLayer = 8;
 
 			PlayerCollisionMask = 0;
 			for (int i = 0; i < 32; ++i) {

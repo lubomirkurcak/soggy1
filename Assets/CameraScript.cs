@@ -6,9 +6,6 @@ using UnityEngine.PostProcessing;
 public class CameraScript : MonoBehaviour {
 	public Transform camt;
 	public Camera cam;
-	public Player p;
-	public Controller controller;
-	public Transform target;
 	public PostProcessingProfile cameraProfile;
 
 	[System.NonSerialized]

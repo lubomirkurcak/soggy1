@@ -6,7 +6,10 @@ using UnityEngine;
 public class Player : MonoBehaviour {
 
 	public Char c;
+
 	public CharacterController cc;
+	public Controller cc2;
+
 	public CameraScript cams;
 	public Transform me;
 
@@ -128,7 +131,7 @@ public class Player : MonoBehaviour {
 	}
 
 	public void Kill(){
-		transform.localPosition = Debug_Respawn;
+		transform.localPosition = pos = Debug_Respawn;
 		vel = Vector3.zero;
 	}
 
@@ -138,14 +141,26 @@ public class Player : MonoBehaviour {
 		}
 
 		if (CInput.GetKeyDown (KeyCode.R)) {
-			transform.localPosition = Debug_Respawn;
-			vel = Vector3.zero;
-
+			Kill ();
 			World.Reset ();
 		}
 
 		if (CInput.GetKey (KeyCode.LeftShift)) {
-			vel = cams.forw * 20f;
+			vel = cams.aim * 20f;
+		}
+	}
+
+	public bool UseCustomController = false;
+	public void Move(Vector3 step){
+		if (UseCustomController) {
+			cc2.pos = pos;
+			cc2.Move (step);
+			pos = cc2.pos;
+			grounded = cc2.grounded && vel.y <= 0f;
+		} else {
+			cc.Move (step);
+			pos = me.localPosition;
+			grounded = walkable_ground && vel.y <= 0f;
 		}
 	}
 
@@ -197,9 +212,11 @@ public class Player : MonoBehaviour {
 				// and move it so that it doesn't clip with geometry
 				if (spaceUp + spaceDown >= 1f) {
 					if (spaceDown < 0.5f) {
-						cc.Move (new Vector3 (0f, 0.5f - spaceDown, 0f));
+						Vector3 motion = new Vector3 (0f, 0.5f - spaceDown, 0f);
+						Move (motion);
 					} else if (spaceUp < 0.5f) {
-						cc.Move (new Vector3 (0f, spaceUp - 0.5f, 0f));
+						Vector3 motion = new Vector3 (0f, spaceUp - 0.5f, 0f);
+						Move (motion);
 					}
 
 					cc.height = 2f;
@@ -212,7 +229,7 @@ public class Player : MonoBehaviour {
 				crouching = true;
 
 				if (grounded) {
-					cc.Move (new Vector3 (0f, -0.5f, 0f));
+					Move (new Vector3 (0f, -0.5f, 0f));
 				}
 			}
 		}
@@ -345,7 +362,7 @@ public class Player : MonoBehaviour {
 
 //		Debug.Log (grounded + " - " + step.y);
 
-		cc.Move (step);
+		Move (step);
 
 		// NOTE(lubomir): Save previous height
 		// TODO(lubomir): Detect when ground is lost when running off the edge of a collider
@@ -353,7 +370,7 @@ public class Player : MonoBehaviour {
 //		liftOffHeight = pos.y;
 
 		// NOTE(lubomir): Update script values
-		eye = pos = me.localPosition;
+		eye = pos;
 		/*if (crouching) {
 			eye.y += 0.45f;
 		} else {
@@ -365,7 +382,6 @@ public class Player : MonoBehaviour {
 //		touching_ground = cc.isGrounded;
 //		touching_ground = charc.touching_ground;
 
-		grounded = walkable_ground && vel.y <= 0f;
 
 		// NOTE(lubomir): Grounded state change behaviour
 		if (last_grounded != grounded) {
@@ -476,7 +492,7 @@ public class Player : MonoBehaviour {
 
 				RaycastHit rayhit;
 				if (Physics.Raycast (pos, d, out rayhit, 0.5f, PlayerCollisionMask, QueryTriggerInteraction.Ignore)) {
-					cc.Move (d * rayhit.distance);
+					Move (d * rayhit.distance);
 					Debug.Log ("Distance: " + rayhit.distance);
 				}
 			}*/
@@ -490,7 +506,7 @@ public class Player : MonoBehaviour {
 				RaycastHit rayhit;
 
 				if (Physics.SphereCast (hit.point + n * 0.4f, 0.4f, downTheSlope, out rayhit, 1f, PlayerCollisionMask, QueryTriggerInteraction.Ignore)) {
-					cc.Move (downTheSlope * rayhit.distance);
+					Move (downTheSlope * rayhit.distance);
 					Debug.Log ("Distance: " + rayhit.distance);
 					return;
 				}
@@ -504,12 +520,12 @@ public class Player : MonoBehaviour {
 				p1.y = pos.y + 0.5f;
 				p2.y = pos.y - 0.5f;
 				if (Physics.CapsuleCast (p1, p2, 0.4f, downTheSlope, out rayhit, 0.4f, PlayerCollisionMask, QueryTriggerInteraction.Ignore)) {
-					cc.Move (downTheSlope * rayhit.distance);
+					Move (downTheSlope * rayhit.distance);
 					Debug.Log ("Distance: " + rayhit.distance);
 				}*/
 
 				/*if (Physics.Raycast (hit.point + n * 0.01f, downTheSlope, out rayhit, 0.4f, PlayerCollisionMask, QueryTriggerInteraction.Ignore)) {
-					cc.Move (downTheSlope * rayhit.distance);
+					Move (downTheSlope * rayhit.distance);
 					Debug.Log ("Distance: " + rayhit.distance);
 				}*/
 			}

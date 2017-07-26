@@ -4,7 +4,6 @@ using UnityEngine;
 
 public class Abilities : MonoBehaviour {
 	public Char c;
-	public CameraScript script;
 	public GameObject projectile;
 
 	KeyCode[] Keybinds;
@@ -51,7 +50,7 @@ public class Abilities : MonoBehaviour {
 			proj.Velocity = 20f;
 			proj.Fire (c.player);
 
-			script.target = proj.transform;
+			c.target = proj.transform;
 		};
 
 		abilities [at++] = a;
@@ -67,7 +66,7 @@ public class Abilities : MonoBehaviour {
 			proj.Velocity = 7f;
 			proj.Fire (c.player);
 
-			script.target = proj.transform;
+			c.target = proj.transform;
 		};
 
 		abilities [at++] = a;

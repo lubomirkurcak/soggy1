@@ -12,6 +12,7 @@ public class UIDebug : MonoBehaviour {
 
 	public Text text;
 	public Player p;
+	public Player2 p2;
 //	public CharController c;
 	public Replay r;
 	public Host h;
@@ -73,6 +74,7 @@ public class UIDebug : MonoBehaviour {
 			"touching_ground: " + c.touching_ground.ToString() + "\n" +
 			"MOVES: " + c.MOVES.ToString() + "\n" +*/
 
+			#if true
 			DrawFloat ("vel xz", Mathf.Sqrt (vel.x * vel.x + vel.z * vel.z)) + 
 			DrawFloat ("vel y", vel.y) + 
 			#if false
@@ -93,7 +95,11 @@ public class UIDebug : MonoBehaviour {
 			"COLLISION" : "") + */
 
 //			Physics.r
+			#else
 
+			"grounded: " + p2.controller.grounded + "\n" + 
+
+			#endif
 
 			"";
 
